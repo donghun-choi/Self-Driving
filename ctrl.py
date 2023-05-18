@@ -1,7 +1,15 @@
 from pyfirmata import Arduino,util
+import tensorflow
+import pandas
 import time
 
+
+
 board = Arduino('/dev/cu.usbmodem21301')
+# can be changed due to port.
+# use ls /dev to found your arduino.
+# 컴터에 따라 뱌꿔요.
+
 print('connected to Arduino')
 
 # Set up Steering pins
@@ -25,9 +33,29 @@ steering_speed_pin.write(1)
 throttle_speed_pin.write(1)
 throttle_speed_pin1.write(1)
 
-throttle_IN0.write(1)
-throttle_IN1.write(0)
+throttle_IN0.write(0)
+throttle_IN1.write(1)
 
 time.sleep(4)
 throttle_IN0.write(1)
-throttle_IN1.write(1) 
+throttle_IN1.write(1)
+# 이게 포워드
+
+
+class Car:
+    def __init__(self, speed):
+        self.speed = speed
+        self.position = 0
+
+    def forward(self):
+        throttle_IN0.write(0)
+        throttle_IN1.write(1)
+        
+    def backward(self):
+        throttle_IN0.write(1)
+        throttle_IN1.write(0)
+        
+    def left(self):
+        return 0
+    def right(self):
+        return 0
