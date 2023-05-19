@@ -1,12 +1,21 @@
 from flask import * # type: ignore
-from flask import render_template
 import datetime as dt
-from flask import url_for
-
-
+import cv2
+import time
+from werkzeug.serving import WSGIRequestHandler
+import numpy as np
 app = Flask(__name__)
 app.config['SECRET_KEY'] = f'yesla%%@#!$DDD DROP database;; setmean;;;'
 app.config["PERMANENT_SESSION_LIFETIME"] = dt.timedelta(minutes=60)
+
+camera = cv2.VideoCapture(0)
+frame_delay = 1 / 30  # Delay for 30 FPS
+
+from car import Car
+Yesla = Car()
+
+print("waiting for sensors")
+time.sleep(1)
 
 
 def ifLogin():
@@ -59,6 +68,45 @@ def logout():
     return redirect(url_for('main'))
 
 
+@app.route('/video_feed')
+def video_feed():
+    return Response(gen_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+
+@app.route('/datatrans')
+def asdf():
+    info = Yesla.getInfo()
+    # return Response(generate_data(), mimetype='text/plain')
+    return Response(str(info['steeringAngleDeg']), mimetype='text/plain')
+
+
+def gen_frames():
+    prev_frame_time = time.time()
+    
+    while True:
+        success, frame = camera.read()
+        if not success:
+            break
+        
+        else:
+            frame = cv2.resize(frame, (320, 240))  # 원하는 해상도로 크기 조정
+            frame = cv2.GaussianBlur(frame, (15, 15), 0)
+            # frame = cv2.Canny(frame,threshold1=3,threshold2=64)
+            # frame = cv2.cvtColor(frame,cv2.COLOR_RGB2HSV)
+            ret, buffer = cv2.imencode('.jpeg', frame)
+            frame = buffer.tobytes()
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+
+        # Delay to achieve the desired frame rate
+        curr_frame_time = time.time()
+        time_diff = curr_frame_time - prev_frame_time
+        if time_diff < frame_delay:
+            time.sleep(frame_delay - time_diff)
+        prev_frame_time = curr_frame_time
+
+
+# WSGIRequestHandler.protocol_version = "HTTP/1.1"
 PORT=5001
 isDebugMode = True
 if __name__ == '__main__':
