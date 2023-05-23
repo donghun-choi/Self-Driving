@@ -9,12 +9,14 @@ import os
 # board = Arduino('/dev/cu.usbmodem1201')
 # board = Arduino('/dev/cu.usbmodem21201')
 # board = Arduino('/dev/cu.usbmodem21401')
+
 board = Arduino('/dev/cu.usbmodem1401')
 
 
 it = util.Iterator(board)
 it.start()
 board.analog[0].enable_reporting()
+board.analog[1].enable_reporting()
 # can be changed due to port.
 # use ls /dev to found your arduino.
 # 컴터에 따라 뱌꿔요.
@@ -27,6 +29,7 @@ steering_IN0= board.get_pin('d:9:o')
 steering_IN1= board.get_pin('d:8:o')
 
 steering_sig_pin = board.get_pin('a:0:i')
+batteryVoltagePin = board.get_pin('a:1:i')
 
 # Set up throttle pins
 
@@ -50,8 +53,7 @@ class Car:
         self.speed = 0
         self.steeringAngleRaw = 0
         self.status = "Cooling Down :D"
-        self.batteryVoltage = 13.0
-        
+        self.batteryVoltage = 12.0
     def forward(self,speed):
         self.speed = speed
         self.status = "creeping forward"
@@ -103,27 +105,22 @@ class Car:
     def getInfo(self):
         
         # sendInfo
-        info = {
+        infoJson = {
                 "steeringAngleRaw":steering_sig_pin.read(),
                 "steeringAngleDeg":360 * (steering_sig_pin.read()-0.5),
                 "motorSpeed":self.speed,
-                "batteryStatus": 0.82, #hardcoded data.
+                "batteryStatus": (batteryVoltagePin.read() * 5.0) / 1024.0 / ( 7500.0 / ( 30000.0 + 7500.0)),
                 "generalStatus": self.status
                 }
+        infoArray =[
+            steering_sig_pin.read(),
+            360 * (steering_sig_pin.read()-0.5),
+            self.speed,
+            (batteryVoltagePin.read() * 5.0) / 1024.0 / ( 7500.0 / ( 30000.0 + 7500.0)),
+            self.status
+            ]
         # print(info)
-        return info
-    def getFakeInfo(self):
-        
-        # sendInfo
-        info = {
-                "steeringAngleRaw":0.5,
-                "steeringAngleDeg":0,
-                "motorSpeed":0.42,
-                "batteryStatus": 0.82,
-                "generalStatus": "creeping forward"
-                }
-        return info
-
+        return infoArray
 if __name__ == "__main__":
     from time import sleep as delay
     import csv
@@ -152,7 +149,7 @@ if __name__ == "__main__":
         ret, frame = cap.read()
         
         carInfo = car.getInfo()
-        carInfo = [carInfo['steeringAngleRaw'],carInfo['motorSpeed']]
+        carInfo = [n,carInfo[1],carInfo[3]]
         print(carInfo)
         
         with open('dt.csv', 'a', newline='') as file:

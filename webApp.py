@@ -2,10 +2,8 @@ from flask import * # type: ignore
 import datetime as dt
 import cv2
 import time
-from werkzeug.serving import WSGIRequestHandler
-import numpy as np
 app = Flask(__name__)
-app.config['SECRET_KEY'] = f'yesla%%@#!$DDD DROP database;; setmean;;;'
+app.config['SECRET_KEY'] = f'FUBKIT'
 app.config["PERMANENT_SESSION_LIFETIME"] = dt.timedelta(minutes=60)
 
 camera = cv2.VideoCapture(0)
@@ -76,8 +74,7 @@ def video_feed():
 @app.route('/datatrans')
 def asdf():
     info = Yesla.getInfo()
-    # return Response(generate_data(), mimetype='text/plain')
-    return Response(str(info['steeringAngleDeg']), mimetype='text/plain')
+    return Response(str(info), mimetype='text/plain')
 
 
 def gen_frames():
@@ -106,7 +103,6 @@ def gen_frames():
         prev_frame_time = curr_frame_time
 
 
-# WSGIRequestHandler.protocol_version = "HTTP/1.1"
 PORT=5001
 isDebugMode = True
 if __name__ == '__main__':
