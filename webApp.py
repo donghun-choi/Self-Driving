@@ -9,7 +9,7 @@ app.config["PERMANENT_SESSION_LIFETIME"] = dt.timedelta(minutes=60)
 camera = cv2.VideoCapture(0)
 frame_delay = 1 / 30  # Delay for 30 FPS
 
-from car import Car
+from car_old_0 import Car
 Yesla = Car()
 
 print("waiting for sensors")
